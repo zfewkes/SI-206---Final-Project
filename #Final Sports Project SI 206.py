@@ -111,11 +111,13 @@ def write_to_basketball_teams_stadiums(data, cur, conn):
 #Zach/BBall Specific Code -----------------------------------------------------
 
 
-
 def main():
     # SETUP DATABASE AND TABLE
+
     cur, conn = setUpDatabase('Sports.db')
 
+
+#------------------------------------------------------------------------- Zach's part
     #delTable('Basketball', cur, conn)
     #delTable('Basketball_teams_stadiums', cur, conn)
 
@@ -130,7 +132,7 @@ def main():
     game_json = read_25_ball_dont_lie_api(str(1))
     write_to_bball_db(game_json, cur, conn)
 
-
+#------------------------------------------------------------------------- Zach's part
 
 
 
