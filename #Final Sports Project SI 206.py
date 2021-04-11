@@ -25,13 +25,13 @@ def setUpDatabase(db_name):
 def setUpSportsTable(name, cur, conn):
     cur.execute('''CREATE TABLE IF NOT EXISTS ''' + name + '''(id INTEGER PRIMARY KEY, game_id INTEGER UNIQUE,
      home_team_score INTEGER, away_team_score INTEGER, agg_score INTEGER,
-     game_length FLOAT, location_hometeam_id INTEGER)''')
+     stadium_hometeam_id INTEGER)''')
     conn.commit()
     print('here')
 
 def setUpLocation_TeamTable(name, cur, conn):
-    cur.execute('''CREATE TABLE IF NOT EXISTS ''' + name + ''' (id INTEGER PRIMARY KEY,
-     home_team TEXT, stadium TEXT)''')
+    cur.execute('''CREATE TABLE IF NOT EXISTS ''' + name + ''' (id INTEGER PRIMARY KEY UNIQUE,
+    team TEXT, stadium TEXT)''')
     conn.commit()
     print('here')
 
@@ -45,7 +45,36 @@ def delTable(name, cur, conn):
 
 
 #Zach/BBall Specific Code -----------------------------------------------------
-def read_25_ball_dont_lie_api(page, cur, conn):
+def read_all_team_ids():
+    print("Reading team ids")
+
+    try:
+        r = requests.get('https://www.balldontlie.io/api/v1/teams')
+        data_0 = r.text
+        data = json.loads(data_0)
+        print('Success')
+        return data
+    except:
+        print('something\'s wrong')
+        return None
+
+
+#unfinished - !!!!
+def read_all_stadium_ids():
+    print("Reading stadium ids")
+    tup_list = []
+    soup = BeautifulSoup(requests.get('https://en.wikipedia.org/wiki/List_of_National_Basketball_Association_arenas').text, 'html.parser')
+    tag = soup.find('tbody')
+    print(tag)
+    for item in tag.find_all('b'):
+        print()
+        print(item)
+        print(item.find('a'))
+        print(item.find('a').get('title'))
+        tup_list.append(item.find('a').get('title'))
+
+
+def read_25_ball_dont_lie_api(page):
     print("Fetching data for <bball>")
 
     try:
@@ -58,15 +87,24 @@ def read_25_ball_dont_lie_api(page, cur, conn):
         print('something\'s wrong')
         return None
 
+
+#data is a list of JSON 
 def write_to_bball_db(data, cur, conn):
 
-    for item in data['']:
-        cur.execute('SELECT id FROM Categories WHERE title = ? LIMIT 1', (item['categories'][0]['title'], )) 
-        cat_id = cur.fetchone()[0]
+    for item in data['data']:
+        cur.execute('''INSERT OR IGNORE INTO Basketball (game_id, home_team_score, away_team_score,
+        agg_score, stadium_hometeam_id) VALUES (?,?,?,?,?)''',
+         (int(item.get('id')), int(item.get('home_team_score')), int(item.get('visitor_team_score')),
+          int(item.get('home_team_score')) +  int(item.get('visitor_team_score')), 
+          int(item.get('home_team').get('id')) ))
+    conn.commit()
 
-        cur.execute('INSERT INTO Restaurants (restaurant_id, name, address, zip, category_id, rating, price) VALUES (?,?,?,?,?,?,?)',
-         (item['id'], item['name'], item['location']['address1'], item['location']['zip_code'], 
-         cat_id, float(item['rating']), item.get('price', '$$$$')))
+def write_to_basketball_teams_stadiums(data, cur, conn):
+    for item in data['data']:
+        #print(item.get('id'))
+        #print(item.get('full_name'))
+        cur.execute('INSERT OR IGNORE INTO Basketball_teams_stadiums (id,team) VALUES (?,?)',
+         (item.get('id', None), item.get('full_name', None)))
     conn.commit()
 
 
@@ -78,12 +116,22 @@ def main():
     # SETUP DATABASE AND TABLE
     cur, conn = setUpDatabase('Sports.db')
 
-    delTable('Basketball', cur, conn)
-    setUpSportsTable('Basketball', cur, conn)
+    #delTable('Basketball', cur, conn)
+    #delTable('Basketball_teams_stadiums', cur, conn)
+
     setUpLocation_TeamTable('Basketball_teams_stadiums', cur, conn)
+    team_table_json = read_all_team_ids()
+    #read_all_stadium_ids()
+    write_to_basketball_teams_stadiums(team_table_json, cur, conn)
+    #print (team_table_json)
 
 
-    game_json = read_25_ball_dont_lie_api(str(1), cur, conn)
+    setUpSportsTable('Basketball', cur, conn)
+    game_json = read_25_ball_dont_lie_api(str(1))
+    write_to_bball_db(game_json, cur, conn)
+
+
+
 
 
 
