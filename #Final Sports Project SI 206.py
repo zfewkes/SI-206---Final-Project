@@ -132,11 +132,14 @@ def main():
     game_json = read_25_ball_dont_lie_api(str(1))
     write_to_bball_db(game_json, cur, conn)
 
+    #cur.execute('''SELECT Basketball.agg_score FROM Basketball JOIN Basketball_teams_stadiums 
+    #ON Basketball.stadium_hometeam_id = Basketball_teams_stadiums.id 
+    #WHERE Basketball_teams_stadiums.team = ? ''', ("Denver Nuggets",))
+
+    #for row in cur: 
+    #    print(row)
+
+
 #------------------------------------------------------------------------- Zach's part
 
-
-
-
-    
-    
 main()
