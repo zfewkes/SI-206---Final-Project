@@ -16,7 +16,7 @@ def setUpDatabase(db_name):
 def createSportsTable(name, cur, conn):
     cur.execute('''CREATE TABLE IF NOT EXISTS ''' + name + '''(id INTEGER PRIMARY KEY, game_id INTEGER UNIQUE,
      home_team_score INTEGER, away_team_score INTEGER, agg_score INTEGER,
-     stadium_hometeam_id INTEGER)''')
+     stadium_hometeam_id INTEGER, away_team_name TEXT)''')
     conn.commit()
     print('here')
 
@@ -104,16 +104,20 @@ def get_game_results():
 
 
 
-def write_to_soccer_db(data, team_stadium_dict, cur, conn):
+def write_to_soccer_db(data, team_list, team_stadium_dict, cur, conn):
     game_id=1
+    count = 1
     for item in data:
-        if item[0] in team_stadium_dict:
-            cur.execute('''INSERT OR IGNORE INTO Soccer (game_id, home_team_score, away_team_score,
-            agg_score, stadium_hometeam_id) VALUES (?,?,?,?,?)''',
+        if item[0] in team_stadium_dict and count < 26:
+            affectedRow = cur.execute('''INSERT OR IGNORE INTO Soccer (game_id, home_team_score, away_team_score,
+            agg_score, stadium_hometeam_id, away_team_name) VALUES (?,?,?,?,?,?)''',
             (game_id, int(item[2]), int(item[3]),
             int(item[2]) + int(item[3]), 
-            int(team_stadium_dict[item[0]])))
-            game_id+=1
+            int(team_stadium_dict[item[0]]),
+            team_list[item[1]][1]))
+            game_id += 1
+            if affectedRow.rowcount == 1:
+                count+=affectedRow.rowcount
     conn.commit()
 
 
@@ -130,7 +134,6 @@ def write_to_soccer_teams_stadiums(data, cur, conn):
 def main():
 
     cur, conn = setUpDatabase('soccer.db')
-    delTable('Soccer', cur, conn)
     delTable('Soccer_teams_stadiums', cur, conn)
 
     createLocation_TeamTable('Soccer_teams_stadiums', cur, conn)
@@ -162,6 +165,6 @@ def main():
       
     print(team_stadium_dict)
 
-    write_to_soccer_db(game_list, team_stadium_dict, cur, conn)
+    write_to_soccer_db(game_list, team_list, team_stadium_dict, cur, conn)
 
 main()
