@@ -24,8 +24,8 @@ def setUpDatabase(db_name):
 
 def setUpSportsTable(name, cur, conn):
     cur.execute('''CREATE TABLE IF NOT EXISTS ''' + name + '''(id INTEGER PRIMARY KEY, game_id INTEGER UNIQUE,
-     home_team_score INTEGER, away_team_score INTEGER, agg_score INTEGER,
-     stadium_hometeam_id INTEGER)''')
+     home_team_score INTEGER, away_team_score INTEGER, agg_score INTEGER, visitor_team_id INTEGER,
+     home_team_id INTEGER)''')
     conn.commit()
     print('here')
 
@@ -65,7 +65,16 @@ def read_all_stadium_ids():
     tup_list = []
     soup = BeautifulSoup(requests.get('https://en.wikipedia.org/wiki/List_of_National_Basketball_Association_arenas').text, 'html.parser')
     tag = soup.find('tbody')
-    print(tag)
+    #print(tag)
+    team_list = []
+    count = 1
+    for item in tag.find_all('a'):
+        if count == 5:
+            team_list.append(item.get('title'))
+        elif count % 6 == 5:
+            team_list.append(item.get('title'))
+        count+=1
+
     for item in tag.find_all('b'):
         print()
         print(item)
@@ -93,10 +102,10 @@ def write_to_bball_db(data, cur, conn):
 
     for item in data['data']:
         cur.execute('''INSERT OR IGNORE INTO Basketball (game_id, home_team_score, away_team_score,
-        agg_score, stadium_hometeam_id) VALUES (?,?,?,?,?)''',
+        agg_score, home_team_id, visitor_team_id) VALUES (?,?,?,?,?,?)''',
          (int(item.get('id')), int(item.get('home_team_score')), int(item.get('visitor_team_score')),
           int(item.get('home_team_score')) +  int(item.get('visitor_team_score')), 
-          int(item.get('home_team').get('id')) ))
+          int(item.get('home_team').get('id')), int(item.get('visitor_team').get('id') )))
     conn.commit()
 
 def write_to_basketball_teams_stadiums(data, cur, conn):
@@ -123,13 +132,18 @@ def main():
 
     setUpLocation_TeamTable('Basketball_teams_stadiums', cur, conn)
     team_table_json = read_all_team_ids()
-    #read_all_stadium_ids()
+    read_all_stadium_ids()
     write_to_basketball_teams_stadiums(team_table_json, cur, conn)
     #print (team_table_json)
 
 
     setUpSportsTable('Basketball', cur, conn)
-    game_json = read_25_ball_dont_lie_api(str(1))
+    cur.execute('SELECT id FROM Basketball')
+    count = 0
+    for row in cur:
+        count += 1
+    page = int(count/ 25) + 1
+    game_json = read_25_ball_dont_lie_api(str(page))
     write_to_bball_db(game_json, cur, conn)
 
     #cur.execute('''SELECT Basketball.agg_score FROM Basketball JOIN Basketball_teams_stadiums 
