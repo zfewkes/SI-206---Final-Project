@@ -136,7 +136,7 @@ def write_to_soccer_teams_stadiums(data, cur, conn):
 
 def main():
 
-    cur, conn = setUpDatabase('soccer.db')
+    cur, conn = setUpDatabase('Sports.db')
     delTable('Soccer_teams_stadiums', cur, conn)
 
     createLocation_TeamTable('Soccer_teams_stadiums', cur, conn)
