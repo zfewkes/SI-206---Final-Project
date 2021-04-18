@@ -66,21 +66,27 @@ def read_all_stadium_ids():
     soup = BeautifulSoup(requests.get('https://en.wikipedia.org/wiki/List_of_National_Basketball_Association_arenas').text, 'html.parser')
     tag = soup.find('tbody')
     #print(tag)
-    team_list = []
+    team_dict = {}
     count = 1
-    for item in tag.find_all('a'):
-        if count == 5:
-            team_list.append(item.get('title'))
-        elif count % 6 == 5:
-            team_list.append(item.get('title'))
-        count+=1
 
-    for item in tag.find_all('b'):
-        print()
-        print(item)
-        print(item.find('a'))
-        print(item.find('a').get('title'))
-        tup_list.append(item.find('a').get('title'))
+    for item in tag.find_all('tr'):
+        try:
+            print(item.find_all('td')[1])
+            print(item.find_all('td')[3])
+
+            if (item.find_all('td')[1].find('a').get('title', 'ERROR') == 'Amalie Arena'
+        or item.find_all('td')[1].find('a').get('title', 'ERROR') == 'ERROR'):
+                continue
+            team_dict[item.find_all('td')[3].find('a').get('title', 'ERROR')] = item.find_all('td')[1].find('a').get('title', 'ERROR')
+        except Exception:
+            pass
+    #the wikipedia page has some real stupid formatting for this entry in particular.
+    #so I just added it myself
+    team_dict['Los Angeles Lakers'] = 'Staples Center'
+
+    #changing the clippers name to match the api format
+    team_dict['LA Clippers'] = team_dict.pop('Los Angeles Clippers')        
+    return team_dict
 
 
 def read_25_ball_dont_lie_api(page):
@@ -108,12 +114,12 @@ def write_to_bball_db(data, cur, conn):
           int(item.get('home_team').get('id')), int(item.get('visitor_team').get('id') )))
     conn.commit()
 
-def write_to_basketball_teams_stadiums(data, cur, conn):
+def write_to_basketball_teams_stadiums(data, cur, conn, stadiums): #HELPS
     for item in data['data']:
         #print(item.get('id'))
         #print(item.get('full_name'))
-        cur.execute('INSERT OR IGNORE INTO Basketball_teams_stadiums (id,team) VALUES (?,?)',
-         (item.get('id', None), item.get('full_name', None)))
+        cur.execute('INSERT OR IGNORE INTO Basketball_teams_stadiums (id, team, stadium) VALUES (?,?,?)',
+         (item.get('id', None), item.get('full_name', None), stadiums.get(item.get('full_name', None), 'ERROR') ) )
     conn.commit()
 
 
@@ -132,8 +138,8 @@ def main():
 
     setUpLocation_TeamTable('Basketball_teams_stadiums', cur, conn)
     team_table_json = read_all_team_ids()
-    read_all_stadium_ids()
-    write_to_basketball_teams_stadiums(team_table_json, cur, conn)
+    stadiums = read_all_stadium_ids()
+    write_to_basketball_teams_stadiums(team_table_json, cur, conn, stadiums)
     #print (team_table_json)
 
 
