@@ -8,19 +8,22 @@ import csv
 import sqlite3
 
 def setUpDatabase(db_name):
+    #Reads from the database file and returns the database cursor and connection
     path = os.path.dirname(os.path.abspath(__file__))
     conn = sqlite3.connect(path+'/'+db_name)
     cur = conn.cursor()
     return cur, conn
 
 def createSportsTable(name, cur, conn):
+    #Creates datatable for information of every match in 2019-2020 Premier League season.
     cur.execute('''CREATE TABLE IF NOT EXISTS ''' + name + '''(id INTEGER PRIMARY KEY, game_id INTEGER UNIQUE,
      home_team_score INTEGER, away_team_score INTEGER, agg_score INTEGER,
-     stadium_hometeam_id INTEGER, away_team_name TEXT)''')
+     stadium_hometeam_id INTEGER, away_team_id INTEGER)''')
     conn.commit()
     print('here')
 
 def createLocation_TeamTable(name, cur, conn):
+    #Creates datatable for every team and its stadium. This table uses 
     cur.execute('''CREATE TABLE IF NOT EXISTS ''' + name + ''' (id INTEGER PRIMARY KEY UNIQUE,
     team TEXT, stadium TEXT)''')
     conn.commit()
@@ -97,7 +100,7 @@ def get_game_results():
         for column in column_tags:
             score = column.text.strip()
             if score != "—":
-                tup_list.append((row_count,column_count, score[0], score[2]))
+                tup_list.append((row_count, column_count, score[0], score[2]))
             column_count += 1
         row_count += 1
     return tup_list, team_list
@@ -110,14 +113,14 @@ def write_to_soccer_db(data, team_list, team_stadium_dict, cur, conn):
     for item in data:
         if item[0] in team_stadium_dict and count < 26:
             affectedRow = cur.execute('''INSERT OR IGNORE INTO Soccer (game_id, home_team_score, away_team_score,
-            agg_score, stadium_hometeam_id, away_team_name) VALUES (?,?,?,?,?,?)''',
+            agg_score, stadium_hometeam_id, away_team_id) VALUES (?,?,?,?,?,?)''',
             (game_id, int(item[2]), int(item[3]),
             int(item[2]) + int(item[3]), 
             int(team_stadium_dict[item[0]]),
-            team_list[item[1]][1]))
+            int(team_stadium_dict[item[1]])))
             game_id += 1
             if affectedRow.rowcount == 1:
-                count+=affectedRow.rowcount
+                count += affectedRow.rowcount
     conn.commit()
 
 
@@ -158,7 +161,7 @@ def main():
     team_stadium_dict={}
     for team in team_table_json['api']['teams']:
         for x in team_list:
-            if x[1]==team.get('name',None):
+            if x[1] == team.get('name',None):
                 for y in stadium_list:
                     if y[2]==team.get('venue_name', None):
                         team_stadium_dict[x[0]]=y[0]  
