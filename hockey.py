@@ -16,7 +16,7 @@ def setUpDatabase(db_name):
 def setUpSportsTable(name, cur, conn):
     cur.execute('''CREATE TABLE IF NOT EXISTS ''' + name + '''(id INTEGER PRIMARY KEY, game_id INTEGER UNIQUE,
      home_team_score INTEGER, away_team_score INTEGER, agg_score INTEGER,
-     stadium_hometeam_id INTEGER)''')
+     stadium_hometeam_id INTEGER, home_team_names TEXT, away_team_names TEXT)''')
     conn.commit()
     print('here')
 
@@ -58,8 +58,8 @@ def getArenas():
     return data
 getArenas()
 
-#arena_data = getArenas()
-#game_data = getScores()
+arena_data = getArenas()
+game_data = getScores()
 
 def parseScores(data):
     #Function returns parsed data from each game ordered by index
@@ -72,11 +72,14 @@ def parseScores(data):
     game_ids = []
     id_num = 0
     home_teams = []
-    game_dict = {}
     list_dict = []
+    home_team_names = []
+    away_team_names = []
     for game in data['response']:
         scores.append(game['scores'])
         home_teams.append((game['teams'].get('home')).get('id'))
+        home_team_names.append(game['teams']['home']['name'])
+        away_team_names.append(game['teams']['away']['name'])
     for game in scores:
         home_team_scores.append(game.get('home'))
         away_team_scores.append(game.get('away'))
@@ -87,59 +90,71 @@ def parseScores(data):
         total_scores.append(
            int(home_team_scores[index])+int(away_team_scores[index]) 
         )
+    #print(game_ids)
     for x in range(len(scores)):
+        game_dict = {}
         game_dict['id']=game_ids[x]
         game_dict['home_team_score']=home_team_scores[x]
         game_dict['away_team_score']=away_team_scores[x]
         game_dict['total_score']=total_scores[x]
         game_dict['stadium_id']=home_teams[x]
+        game_dict['home_team_name']=home_team_names[x]
+        game_dict['away_team_name']=away_team_names[x]
         list_dict.append(game_dict)
-    print(list_dict)
     return list_dict
-
+parseScores(game_data)
 
 def parseArenas(data):
     #Function return dict of home team id and arena name
-    dic = {}
     home_team_id = []
-    arena_name = []
+    arena_names = []
+    team_names = []
     list_dict = []
     for x in data['response']:
         home_team_id.append(x['id'])
-        arena_name.append((x['arena']['name']))
+        arena_names.append((x['arena']['name']))
+        team_names.append(x['name'])
+    #print(len(arena_names))
+    #print(len(home_team_id))
+
     for x in range(len(home_team_id)):
+        dic = {}
         dic['stadium_id']=home_team_id[x]
-        dic['full_name']=arena_name[x]
+        dic['stadium_name']=arena_names[x]
+        dic['team_name']=team_names[x]
+        list_dict.append(dic)
+    #print(list_dict)
     return list_dict
+#parseArenas(arena_data)
 
 def writing_arenadata(cur, conn):
     arena_dict = parseArenas(arena_data)
-    for team in arena_dict:
-        cur.execute('INSERT OR IGNORE INTO Basketball_teams_stadiums (id,team) VALUES (?,?)',
-        (int(team.get('id')), team.get('full_name')))
+    for arena in arena_dict:
+        print(arena)
+    for stadium in arena_dict:
+        cur.execute('INSERT OR IGNORE INTO Hockey_Stadiums (id, team, stadium) VALUES (?,?,?)',
+        (int(stadium.get('stadium_id')), stadium.get('team_name'), stadium.get('stadium_name')))
     conn.commit()
-
 
 def writing_gamedata(cur, conn):
     game_dict = parseScores(game_data)
+    #for game in game_dict:
+    #    print(game)
     for game in game_dict:
-        cur.execute('''INSERT OR IGNORE INTO Basketball (game_id, home_team_score, away_team_score,
-        agg_score, stadium_hometeam_id) VALUES (?,?,?,?,?)''',
+        cur.execute('''INSERT OR IGNORE INTO Hockey_games 
+        (game_id, home_team_score, away_team_score,agg_score, stadium_hometeam_id, home_team_names, away_team_names) VALUES (?,?,?,?,?,?,?)''',
         (int(game.get('id')), int(game.get('home_team_score')), 
         int(game.get('away_team_score')), int(game.get('total_score')), 
-        int(game.get('stadium_id')))
+        int(game.get('stadium_id')), game.get('home_team_name'), game.get('away_team_name')))
     conn.commit()
 
-#__________________________________________________________________________
-#Setting up and using functions
-def main():
-    cur, conn = setUpDatabase('hockey.db')
-    
-    setUpLocation_TeamTable("hockey_stadiums", cur, conn)
-    writing_arenadata(cur, conn)
 
-    setUpSportsTable('hockey_games', cur, conn)
-    writing_gamedata(cur, conn)
+setUpDatabase('hockey.db')
+cur, conn = setUpDatabase('hockey.db')    
+setUpLocation_TeamTable("hockey_stadiums", cur, conn)
+writing_arenadata(cur, conn)
+setUpSportsTable('hockey_games', cur, conn)
+writing_gamedata(cur, conn)
 
 
 #parseScores(game_data)
