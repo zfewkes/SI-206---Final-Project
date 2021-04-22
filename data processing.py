@@ -17,7 +17,7 @@ def setUpDatabase(db_name):
     cur = conn.cursor()
     return cur, conn
 
-
+#this is a seaborn graph of the kde and the general distribution
 def game_score_plot(all_scores, cur, conn):
    
     sns.set_theme()
