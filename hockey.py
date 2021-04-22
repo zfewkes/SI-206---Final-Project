@@ -148,9 +148,9 @@ def writing_gamedata(cur, conn):
         int(game.get('stadium_id')), game.get('home_team_name'), game.get('away_team_name')))
     conn.commit()
 
-
 setUpDatabase('Sports.db')
-cur, conn = setUpDatabase('Sports.db')    
+cur, conn = setUpDatabase('Sports.db')   
+delTable('hockey_games', cur, conn) 
 setUpLocation_TeamTable("hockey_stadiums", cur, conn)
 writing_arenadata(cur, conn)
 setUpSportsTable('hockey_games', cur, conn)

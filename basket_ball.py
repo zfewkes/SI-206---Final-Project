@@ -71,8 +71,8 @@ def read_all_stadium_ids():
 
     for item in tag.find_all('tr'):
         try:
-            print(item.find_all('td')[1])
-            print(item.find_all('td')[3])
+           # print(item.find_all('td')[1])
+           # print(item.find_all('td')[3])
 
             if (item.find_all('td')[1].find('a').get('title', 'ERROR') == 'Amalie Arena'
         or item.find_all('td')[1].find('a').get('title', 'ERROR') == 'ERROR'):
@@ -144,11 +144,12 @@ def main():
 
 
     setUpSportsTable('Basketball', cur, conn)
-    cur.execute('SELECT id FROM Basketball')
+    cur.execute('SELECT MAX(id) FROM Basketball')
     count = 0
-    for row in cur:
-        count += 1
-    page = int(count/ 25) + 1
+    for item in cur:
+        count = item
+    #print(count[0])
+    page = int(count[0]/ 25) + 1
     game_json = read_25_ball_dont_lie_api(str(page))
     write_to_bball_db(game_json, cur, conn)
 
