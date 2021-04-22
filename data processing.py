@@ -7,12 +7,16 @@ import os
 import seaborn as sns
 import numpy as np
 import pandas as pd
+import csv
+import json
+import plotly.graph_objects as go
 
 def setUpDatabase(db_name):
     path = os.path.dirname(os.path.abspath(__file__))
     conn = sqlite3.connect(path+'/'+db_name)
     cur = conn.cursor()
     return cur, conn
+
 
 def game_score_plot(all_scores, cur, conn):
    
@@ -40,6 +44,7 @@ def game_score_plot(all_scores, cur, conn):
     ax.set_xlabel('Scores')
     plt.show()
 
+
 #getting certain data from the Database
 def working_agg_scores(names, cur, conn):
     score_dict = {}
@@ -52,6 +57,7 @@ def working_agg_scores(names, cur, conn):
         del score_list
     return score_dict
 
+
 def working_home_scores(names, cur, conn):
     score_dict = {}
     for name in names:
@@ -63,6 +69,7 @@ def working_home_scores(names, cur, conn):
         del score_list
     return score_dict
 
+
 def working_away_scores(names, cur, conn):
     score_dict = {}
     for name in names:
@@ -73,6 +80,7 @@ def working_away_scores(names, cur, conn):
         score_dict[name] = score_list
         del score_list
     return score_dict
+
 
 def calc_median_std(all_scores, cur, conn):
     #Using numpy arrays to calculate mean, median, and standard deviation
@@ -99,7 +107,7 @@ def calc_median_std(all_scores, cur, conn):
     stats_dict['basketball']['mean'] = np.mean(hockey_arr)
     stats_dict['basketball']['median'] = np.median(hockey_arr)
     stats_dict['basketball']['std'] = np.std(hockey_arr)
-
+    return stats_dict
     #print('here')
 
 #gets a dictionary with the sports as keys and the 
@@ -142,8 +150,86 @@ def calc_med_mean_std_per_team(cur, conn):
         })
 
     #done with bball--------------------------------------------------------------
+    
+    #Soccer-----------------------------------------------------------------------
+    team_scores_dict = {}
+    cur.execute('''SELECT Soccer.home_team_score, Soccer_teams_stadiums.team
+                FROM Soccer JOIN Soccer_teams_stadiums
+                ON Soccer.stadium_hometeam_id = Soccer_teams_stadiums.id''')
+
+    for item in cur:
+        team_scores_dict[item[1]] = team_scores_dict.get(item[1], []) + [item[0]]
+
+    #GETTING VISITOR TEAM DATA
+    cur.execute('''SELECT Soccer.away_team_score, Soccer_teams_stadiums.team
+                FROM Soccer JOIN Soccer_teams_stadiums
+                ON Soccer.away_team_id = Soccer_teams_stadiums.id''')
+
+    for item in cur:
+        team_scores_dict[item[1]] = team_scores_dict.get(item[1], []) + [item[0]]
+
+    for item in team_scores_dict:
+        team_np_arr = np.array(team_scores_dict[item])
+        team_stats_dict['soccer'].append({'team': item, 
+        'mean' : np.mean(team_np_arr), 
+        'median' : np.median(team_np_arr),
+        'std' : np.std(team_np_arr)
+        })
+    return team_stats_dict
+    #end soccer--------------------------------------------------------------------
 
 
+def write_out_json(filename, team_stats):
+    """
+    This function encodes the cache dictionary (CACHE_DICT) into JSON format and
+    writes the JSON to the cache file (CACHE_FNAME) to save the search results.
+    """
+    json_file = json.dumps(team_stats)
+
+    dir = os.path.dirname(__file__)
+    outFile = open(os.path.join(dir, filename), 'w')
+    outFile.write(json_file)  #writes over the file... Doesn't save it!
+    outFile.close()
+
+#finds the teams who's median score is the highest (in terms of standard deviation)
+#away from its own distributions median
+def find_top_teams(agg_stats, team_stats):
+    #basketball!
+    bball_mean_score = agg_stats['basketball']['mean']
+    bball_std = agg_stats['basketball']['std']
+    dist_from_avg = {}
+    for item in team_stats['basketball']:
+        dist_from_avg[item['team']] = (item['mean'] - bball_mean_score) / bball_std
+
+    #Soccer!
+    soc_mean_score = agg_stats['soccer']['mean']
+    soc_std = agg_stats['soccer']['std']
+    for item in team_stats['soccer']:
+        dist_from_avg[item['team']] = (item['mean'] - soc_mean_score) / soc_std
+
+    #Hockey!
+
+    #calculating best teams...
+    tup_dist_from_avg = dist_from_avg.items()
+
+    tup_dist_from_avg = sorted(tup_dist_from_avg, key = lambda t: t[1], reverse=True)
+    return tup_dist_from_avg
+
+#a simple plotly bar graph
+def plot_top_teams(top_teams):
+    
+    teams = []
+    scores = []
+    for i in range(10):
+        teams.append(top_teams[i][0])
+        scores.append(top_teams[i][1])
+
+    fig = go.Figure([go.Bar(x=teams, y=scores)])
+    title_str = "Top 10 teams by standard deviation(s) above mean"
+    fig.update_layout(title = title_str, xaxis_tickangle=-45, barmode='group',
+                  xaxis = {'tickmode':'linear'}, xaxis_title="Teams",
+    yaxis_title="Standard deviations from sport mean")
+    fig.show()
 
 def main():
 
@@ -162,20 +248,19 @@ def main():
     print(len(all_scores['hockey']))
 
     #Finished data collection------------------------------------------------------
-    
     #data processing---------------------------------------------------------------
-    stats_dict = calc_median_std(all_scores, cur, conn)
-    calc_med_mean_std_per_team(cur, conn)
+    agg_stats_dict = calc_median_std(all_scores, cur, conn)
+    team_stats_dict = calc_med_mean_std_per_team(cur, conn)
 
+    write_out_json('all_stats.json', team_stats_dict)
+    write_out_json('agg_stats.json', agg_stats_dict)
 
-
-
+    top_teams = find_top_teams(agg_stats_dict, team_stats_dict)
 
     #end data processing-----------------------------------------------------------
-
     #visualizations----------------------------------------------------------------
     game_score_plot(all_scores, cur, conn)
-
+    plot_top_teams(top_teams)
 
 
 
