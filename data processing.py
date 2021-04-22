@@ -75,8 +75,12 @@ def working_away_scores(names, cur, conn):
     return score_dict
 
 def calc_median_std(all_scores, cur, conn):
-    #getting the total number of scores and dividing them by the total
-    #sum to get a mean value and also the median and standard deviation. 
+    #Using numpy arrays to calculate mean, median, and standard deviation
+    #for the entire sport
+    #stored as a dictionary with the sport as a key, and the values as
+    #dictionaries with the mean, median, and mode as keys and the values
+    #cooresponding to those vals for the sport.
+
     stats_dict = {}
     hockey_arr = np.array(all_scores['hockey'])
     stats_dict['hockey'] = {}
@@ -96,7 +100,51 @@ def calc_median_std(all_scores, cur, conn):
     stats_dict['basketball']['median'] = np.median(hockey_arr)
     stats_dict['basketball']['std'] = np.std(hockey_arr)
 
-    print('here')
+    #print('here')
+
+#gets a dictionary with the sports as keys and the 
+#values as a list of the team name, mean, median, and standard 
+#deviation in that order
+#just take all the data as it comes 
+#write to each thingy 
+#to collect --> loop throught id's?
+def calc_med_mean_std_per_team(cur, conn):
+
+    team_stats_dict = {'soccer' : [], 'hockey': [], 'basketball': []}
+    team_scores_dict = {}
+    
+    #basketball
+    # I want the scores of all the games in which each played
+    #two steps ---> 1.all home and  2. all away
+    cur.execute('''SELECT Basketball.home_team_score, Basketball_teams_stadiums.team
+                FROM Basketball JOIN Basketball_teams_stadiums
+                ON Basketball.home_team_id = Basketball_teams_stadiums.id''')
+
+    for item in cur:
+        team_scores_dict[item[1]] = team_scores_dict.get(item[1], []) + [item[0]]
+
+    #GETTING VISITOR TEAM DATA
+    cur.execute('''SELECT Basketball.away_team_score, Basketball_teams_stadiums.team
+                FROM Basketball JOIN Basketball_teams_stadiums
+                ON Basketball.visitor_team_id = Basketball_teams_stadiums.id''')
+
+    for item in cur:
+        team_scores_dict[item[1]] = team_scores_dict.get(item[1], []) + [item[0]]
+
+    #Getting the stats------------------------------------------------------------
+    
+    for item in team_scores_dict:
+        team_np_arr = np.array(team_scores_dict[item])
+        team_stats_dict['basketball'].append({'team': item, 
+        'mean' : np.mean(team_np_arr), 
+        'median' : np.median(team_np_arr),
+        'std' : np.std(team_np_arr)
+        })
+
+    #done with bball--------------------------------------------------------------
+
+
+
 def main():
 
     #collecting the data from the database----------------------------------------
@@ -117,7 +165,8 @@ def main():
     
     #data processing---------------------------------------------------------------
     stats_dict = calc_median_std(all_scores, cur, conn)
-    
+    calc_med_mean_std_per_team(cur, conn)
+
 
 
 
