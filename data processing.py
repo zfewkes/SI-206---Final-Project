@@ -82,7 +82,7 @@ def working_away_scores(names, cur, conn):
     return score_dict
 
 
-def calc_median_std(all_scores, cur, conn):
+def calc_agg_mean_median_std(all_scores, cur, conn):
     #Using numpy arrays to calculate mean, median, and standard deviation
     #for the entire sport
     #stored as a dictionary with the sport as a key, and the values as
@@ -249,7 +249,7 @@ def main():
 
     #Finished data collection------------------------------------------------------
     #data processing---------------------------------------------------------------
-    agg_stats_dict = calc_median_std(all_scores, cur, conn)
+    agg_stats_dict = calc_agg_mean_median_std(all_scores, cur, conn)
     team_stats_dict = calc_med_mean_std_per_team(cur, conn)
 
     write_out_json('all_stats.json', team_stats_dict)

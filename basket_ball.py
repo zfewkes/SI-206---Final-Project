@@ -59,15 +59,15 @@ def read_all_team_ids():
         return None
 
 
-#unfinished - !!!!
+#Finished 
 def read_all_stadium_ids():
     print("Reading stadium ids")
-    tup_list = []
+    #tup_list = []
     soup = BeautifulSoup(requests.get('https://en.wikipedia.org/wiki/List_of_National_Basketball_Association_arenas').text, 'html.parser')
     tag = soup.find('tbody')
     #print(tag)
     team_dict = {}
-    count = 1
+    #count = 1
 
     for item in tag.find_all('tr'):
         try:
@@ -145,9 +145,7 @@ def main():
 
     setUpSportsTable('Basketball', cur, conn)
     cur.execute('SELECT MAX(id) FROM Basketball')
-    count = 0
-    for item in cur:
-        count = item
+    count = cur.fetchone()
     #print(count[0])
     page = int(count[0]/ 25) + 1
     game_json = read_25_ball_dont_lie_api(str(page))
