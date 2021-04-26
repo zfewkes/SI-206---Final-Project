@@ -175,9 +175,37 @@ def calc_med_mean_std_per_team(cur):
         'median' : np.median(team_np_arr),
         'std' : np.std(team_np_arr)
         })
-    return team_stats_dict
+    
     #end soccer--------------------------------------------------------------------
+    #Hockey------------------------------------------------------------------------
+    team_scores_dict = {}
+    cur.execute('''SELECT hockey_games.home_team_score, hockey_stadiums.team
+                FROM hockey_games JOIN hockey_stadiums
+                ON hockey_games.hometeam_id = hockey_stadiums.hometeam_id''')
 
+    for item in cur:
+        team_scores_dict[item[1]] = team_scores_dict.get(item[1], []) + [item[0]]
+
+    #GETTING VISITOR TEAM DATA
+    cur.execute('''SELECT hockey_games.away_team_score, hockey_stadiums.team
+                FROM hockey_games JOIN hockey_stadiums
+                ON hockey_games.away_team_id = hockey_stadiums.hometeam_id''')
+
+    for item in cur:
+        team_scores_dict[item[1]] = team_scores_dict.get(item[1], []) + [item[0]]
+
+    for item in team_scores_dict:
+        team_np_arr = np.array(team_scores_dict[item])
+        team_stats_dict['hockey'].append({'team': item, 
+        'mean' : np.mean(team_np_arr), 
+        'median' : np.median(team_np_arr),
+        'std' : np.std(team_np_arr)
+        })
+
+    return team_stats_dict
+
+
+    #end hockey--------------------------------------------------------------------
 
 def write_out_json(filename, team_stats):
     """
@@ -208,6 +236,12 @@ def find_top_teams(agg_stats, team_stats):
         dist_from_avg[item['team']] = (item['mean'] - soc_mean_score) / soc_std
 
     #Hockey!
+    hoc_mean_score = agg_stats['hockey']['mean']
+    hoc_std = agg_stats['hockey']['std']
+    for item in team_stats['hockey']:
+        dist_from_avg[item['team']] = (item['mean'] - hoc_mean_score) / hoc_std
+
+
 
     #calculating best teams...
     tup_dist_from_avg = dist_from_avg.items()
@@ -249,8 +283,8 @@ def main():
 
     #Finished data collection------------------------------------------------------
     #data processing---------------------------------------------------------------
-    agg_stats_dict = calc_agg_mean_median_std(all_scores, cur, conn)
-    team_stats_dict = calc_med_mean_std_per_team(cur, conn)
+    agg_stats_dict = calc_agg_mean_median_std(all_scores)
+    team_stats_dict = calc_med_mean_std_per_team(cur)
 
     write_out_json('all_stats.json', team_stats_dict)
     write_out_json('agg_stats.json', agg_stats_dict)
