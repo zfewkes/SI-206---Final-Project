@@ -137,7 +137,7 @@ def write_to_soccer_teams_stadiums(data, cur, conn):
 def main():
 
     cur, conn = setUpDatabase('Sports.db')
-    delTable('Soccer_teams_stadiums', cur, conn)
+    
 
     createLocation_TeamTable('Soccer_teams_stadiums', cur, conn)
     team_table_json = get_team_ids()
@@ -150,14 +150,14 @@ def main():
         stadium_id+=1
 
     write_to_soccer_teams_stadiums(stadium_list, cur, conn)
-    print (team_table_json)
+    #print (team_table_json)
     #print(tup_list)
 
     createSportsTable('Soccer', cur, conn)
     game_list, team_list = get_game_results()
-    print(game_list, team_list)
+    #print(game_list, team_list)
 
-    print(stadium_list)
+    #print(stadium_list)
     team_stadium_dict={}
     for team in team_table_json['api']['teams']:
         for x in team_list:
@@ -166,7 +166,7 @@ def main():
                     if y[2]==team.get('venue_name', None):
                         team_stadium_dict[x[0]]=y[0]  
       
-    print(team_stadium_dict)
+    #print(team_stadium_dict)
 
     write_to_soccer_db(game_list, team_list, team_stadium_dict, cur, conn)
 

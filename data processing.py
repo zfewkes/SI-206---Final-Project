@@ -82,7 +82,7 @@ def working_away_scores(names, cur, conn):
     return score_dict
 
 
-def calc_agg_mean_median_std(all_scores, cur, conn):
+def calc_agg_mean_median_std(all_scores):
     #Using numpy arrays to calculate mean, median, and standard deviation
     #for the entire sport
     #stored as a dictionary with the sport as a key, and the values as
@@ -116,7 +116,7 @@ def calc_agg_mean_median_std(all_scores, cur, conn):
 #just take all the data as it comes 
 #write to each thingy 
 #to collect --> loop throught id's?
-def calc_med_mean_std_per_team(cur, conn):
+def calc_med_mean_std_per_team(cur):
 
     team_stats_dict = {'soccer' : [], 'hockey': [], 'basketball': []}
     team_scores_dict = {}
@@ -236,7 +236,7 @@ def main():
     #collecting the data from the database----------------------------------------
     cur, conn = setUpDatabase('Sports.db')
     names = ['Basketball', 'hockey_games', 'Soccer']
-    agg_scores = working_agg_scores(names, cur, conn)
+    #agg_scores = working_agg_scores(names, cur, conn)
     home_scores = working_home_scores(names, cur, conn)
     away_scores = working_away_scores(names, cur, conn)
 

@@ -145,9 +145,12 @@ def main():
 
     setUpSportsTable('Basketball', cur, conn)
     cur.execute('SELECT MAX(id) FROM Basketball')
-    count = cur.fetchone()
+    count = cur.fetchone()[0]
+    if count == None:
+        count = 1
+        
     #print(count[0])
-    page = int(count[0]/ 25) + 1
+    page = int(count/ 25) + 1
     game_json = read_25_ball_dont_lie_api(str(page))
     write_to_bball_db(game_json, cur, conn)
 
