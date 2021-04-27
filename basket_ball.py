@@ -8,10 +8,7 @@
 from bs4 import BeautifulSoup
 import requests
 import json
-import unittest
-import re
 import os
-import csv
 import sqlite3
 
 

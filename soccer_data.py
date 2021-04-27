@@ -1,10 +1,7 @@
 from bs4 import BeautifulSoup
 import requests
-import unittest
-import re
 import json
 import os
-import csv
 import sqlite3
 
 def setUpDatabase(db_name):

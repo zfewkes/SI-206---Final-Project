@@ -272,11 +272,11 @@ def main():
     away_scores = working_away_scores(names, cur)
 
     all_scores = {}
-    print(len(home_scores['hockey_games']))
+    #print(len(home_scores['hockey_games']))
     all_scores['hockey'] = home_scores['hockey_games'] + away_scores['hockey_games']
     all_scores['soccer'] = home_scores['Soccer'] + away_scores['Soccer']
     all_scores['basketball'] = home_scores['Basketball'] + away_scores['Basketball']
-    print(len(all_scores['hockey']))
+    #print(len(all_scores['hockey']))
 
     #Finished data collection------------------------------------------------------
     #data processing---------------------------------------------------------------

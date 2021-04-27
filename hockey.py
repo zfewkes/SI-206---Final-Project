@@ -1,13 +1,8 @@
 from bs4 import BeautifulSoup
 import requests
 import json
-import unittest
-import re
 import os
-import csv
 import sqlite3
-from sklearn import preprocessing
-import numpy as np
  
 #db setup______________________________________
  
