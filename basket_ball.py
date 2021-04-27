@@ -36,9 +36,6 @@ def setUpLocation_TeamTable(name, cur, conn):
     print('here')
 
 #For use in case of mistakes
-def delTable(name, cur, conn):
-    cur.execute("DROP TABLE IF EXISTS " + name)
-    conn.commit()
 
 #USEFUL CODE FOR ALL ----------------------------------------------------------
 
@@ -133,8 +130,6 @@ def main():
 
 
 #------------------------------------------------------------------------- Zach's part
-    #delTable('Basketball', cur, conn)
-    #delTable('Basketball_teams_stadiums', cur, conn)
 
     setUpLocation_TeamTable('Basketball_teams_stadiums', cur, conn)
     team_table_json = read_all_team_ids()

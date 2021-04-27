@@ -30,10 +30,7 @@ def setUpLocation_TeamTable(name, cur, conn):
    conn.commit()
    print('here')
  
-#For use in case of mistakes
-def delTable(name, cur, conn):
-   cur.execute("DROP TABLE IF EXISTS " + name)
-   conn.commit()
+
  
 #setUpDatabase('hockey.db')
  
@@ -184,8 +181,6 @@ index = 0
 
 setUpDatabase('Sports.db')
 cur, conn = setUpDatabase('Sports.db')   
-#delTable('hockey_stadiums', cur, conn)
-#delTable('hockey_games', cur, conn)
 setUpLocation_TeamTable("hockey_stadiums", cur, conn)
 writing_arenadata(cur, conn)
 

@@ -30,11 +30,6 @@ def createLocation_TeamTable(name, cur, conn):
     print('here')
 
 
-def delTable(name, cur, conn):
-    cur.execute("DROP TABLE IF EXISTS " + name)
-    conn.commit()
-
-
 def get_team_ids():
     try: 
         url = "https://api-football-v1.p.rapidapi.com/v2/teams/league/524"

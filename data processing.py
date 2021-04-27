@@ -1,13 +1,10 @@
 #data processing
 
-import matplotlib
 import matplotlib.pyplot as plt
 import sqlite3
 import os
 import seaborn as sns
 import numpy as np
-import pandas as pd
-import csv
 import json
 import plotly.graph_objects as go
 
@@ -18,7 +15,7 @@ def setUpDatabase(db_name):
     return cur, conn
 
 #this is a seaborn graph of the kde and the general distribution
-def game_score_plot(all_scores, cur, conn):
+def game_score_plot(all_scores):
    
     sns.set_theme()
     ax = sns.distplot(all_scores['basketball'], kde_kws={'bw_adjust' : 1.2})
@@ -46,7 +43,7 @@ def game_score_plot(all_scores, cur, conn):
 
 
 #getting certain data from the Database
-def working_agg_scores(names, cur, conn):
+def working_agg_scores(names, cur):
     score_dict = {}
     for name in names:
         cur.execute('''SELECT agg_score FROM ''' + name)
@@ -58,7 +55,7 @@ def working_agg_scores(names, cur, conn):
     return score_dict
 
 
-def working_home_scores(names, cur, conn):
+def working_home_scores(names, cur):
     score_dict = {}
     for name in names:
         cur.execute('''SELECT home_team_score FROM ''' + name)
@@ -70,7 +67,7 @@ def working_home_scores(names, cur, conn):
     return score_dict
 
 
-def working_away_scores(names, cur, conn):
+def working_away_scores(names, cur):
     score_dict = {}
     for name in names:
         cur.execute('''SELECT away_team_score FROM ''' + name)
@@ -270,9 +267,9 @@ def main():
     #collecting the data from the database----------------------------------------
     cur, conn = setUpDatabase('Sports.db')
     names = ['Basketball', 'hockey_games', 'Soccer']
-    #agg_scores = working_agg_scores(names, cur, conn)
-    home_scores = working_home_scores(names, cur, conn)
-    away_scores = working_away_scores(names, cur, conn)
+    #agg_scores = working_agg_scores(names, cur)
+    home_scores = working_home_scores(names, cur)
+    away_scores = working_away_scores(names, cur)
 
     all_scores = {}
     print(len(home_scores['hockey_games']))
@@ -293,7 +290,7 @@ def main():
 
     #end data processing-----------------------------------------------------------
     #visualizations----------------------------------------------------------------
-    game_score_plot(all_scores, cur, conn)
+    game_score_plot(all_scores)
     plot_top_teams(top_teams)
 
 
