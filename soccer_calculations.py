@@ -36,7 +36,7 @@ def sort_tuples(stadium_dict, number):
     tuple_list = []
     for tup in stadium_goal_tuples:
         tuple_list.append(tup)
-    stadium_goal_sorted = sorted(tuple_list, key=lambda tup: tup[1])
+    stadium_goal_sorted = sorted(tuple_list, key=lambda tup: tup[1], reverse = True)
 
     return stadium_goal_sorted[:number]
 
@@ -75,7 +75,7 @@ def create_graph(stadium_goal_sorted):
     data = trace1
     layout = go.Layout(
         title = go.layout.Title(
-            text='Average Hometeam Goals Scored In Each Stadium',
+            text='Top 10 Premier League Stadiums by Average Hometeam Goals Scored',
             xref='paper',
             x = 0,   
         ),
@@ -98,7 +98,7 @@ def create_graph(stadium_goal_sorted):
 def main():
     cur, conn = setUpDatabase('Sports.db')
     stadium_dict = calculation(conn, cur)
-    stadium_goal_sorted = sort_tuples(stadium_dict, 20)
+    stadium_goal_sorted = sort_tuples(stadium_dict, 10)
     write_file(stadium_goal_sorted)
     create_graph(stadium_goal_sorted)
 
